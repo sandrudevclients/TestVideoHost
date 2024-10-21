@@ -2,6 +2,7 @@ import streamlit as st
 from telethon.sync import TelegramClient
 from telethon.tl.types import DocumentAttributeFilename
 import os
+import asyncio
 
 # Указываем API ID и Hash
 api_id = '22328650'
@@ -14,18 +15,21 @@ channel_username = 'testchannelparso'
 client = TelegramClient('session_name', api_id, api_hash)
 
 # Функция для получения всех файлов из канала
-@st.cache(allow_output_mutation=True)
-def get_files_from_channel():
-    client.start()
-    entity = client.get_entity(channel_username)
+async def async_get_files_from_channel():
+    await client.start()
+    entity = await client.get_entity(channel_username)
     
     files = []
-    for message in client.iter_messages(entity):
+    async for message in client.iter_messages(entity):
         if message.media and hasattr(message.media, 'document'):
             for attribute in message.media.document.attributes:
                 if isinstance(attribute, DocumentAttributeFilename):
                     files.append((attribute.file_name, message))
     return files
+
+def get_files_from_channel():
+    # Запускаем асинхронную функцию в event loop
+    return asyncio.run(async_get_files_from_channel())
 
 # Стримлит интерфейс
 st.title('File Downloader from Telegram Channel')
