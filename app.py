@@ -1,8 +1,9 @@
 import streamlit as st
 from telethon import TelegramClient
 import os
+import asyncio
 
-# Задайте свои параметры для Telethon
+# Ваши параметры для Telethon
 api_id = '22328650'
 api_hash = '20b45c386598fab8028b1d99b63aeeeb'
 channel_id = '-1002396135016'
@@ -29,6 +30,14 @@ async def send_video_to_channel(video_path, channel_id):
         return False
     finally:
         await client.disconnect()
+
+# Функция для запуска асинхронной задачи в Streamlit
+def run_async_task(task):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    result = loop.run_until_complete(task)
+    loop.close()
+    return result
 
 # Интерфейс Streamlit
 st.title("Загрузка и отправка видео в Telegram канал")
@@ -61,7 +70,7 @@ if st.button("Отправить видео в Telegram канал"):
             for video_path in st.session_state['videos']:
                 st.info(f"Отправка {video_path} в канал...")
                 # Отправляем видео в Telegram канал
-                result = client.loop.run_until_complete(send_video_to_channel(video_path, channel_id))
+                result = run_async_task(send_video_to_channel(video_path, channel_id))
                 if result:
                     st.success(f"Видео {video_path} успешно отправлено!")
                 else:
