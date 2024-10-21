@@ -11,25 +11,24 @@ api_hash = '20b45c386598fab8028b1d99b63aeeeb'
 # Юзернейм канала
 channel_username = 'testchannelparso'
 
-# Создаем клиент
-client = TelegramClient('session_name', api_id, api_hash)
-
-# Функция для получения всех файлов из канала
+# Создаем новый event loop
 async def async_get_files_from_channel():
-    await client.start()
-    entity = await client.get_entity(channel_username)
-    
-    files = []
-    async for message in client.iter_messages(entity):
-        if message.media and hasattr(message.media, 'document'):
-            for attribute in message.media.document.attributes:
-                if isinstance(attribute, DocumentAttributeFilename):
-                    files.append((attribute.file_name, message))
-    return files
+    async with TelegramClient('session_name', api_id, api_hash) as client:
+        entity = await client.get_entity(channel_username)
+        
+        files = []
+        async for message in client.iter_messages(entity):
+            if message.media and hasattr(message.media, 'document'):
+                for attribute in message.media.document.attributes:
+                    if isinstance(attribute, DocumentAttributeFilename):
+                        files.append((attribute.file_name, message))
+        return files
 
+# Синхронная обертка для вызова асинхронной функции
 def get_files_from_channel():
-    # Запускаем асинхронную функцию в event loop
-    return asyncio.run(async_get_files_from_channel())
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    return loop.run_until_complete(async_get_files_from_channel())
 
 # Стримлит интерфейс
 st.title('File Downloader from Telegram Channel')
