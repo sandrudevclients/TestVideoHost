@@ -33,8 +33,8 @@ async def send_video_to_channel(video_path, channel_id):
 
 # Функция для запуска асинхронной задачи в Streamlit
 def run_async_task(task):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = asyncio.new_event_loop()  # Создаем новый событийный цикл
+    asyncio.set_event_loop(loop)  # Устанавливаем его как текущий
     result = loop.run_until_complete(task)
     loop.close()
     return result
