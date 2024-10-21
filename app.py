@@ -8,20 +8,17 @@ api_id = '22328650'
 api_hash = '20b45c386598fab8028b1d99b63aeeeb'
 channel_id = '-1002396135016'
 
-# Инициализация Telethon клиента
-client = TelegramClient('session_name', api_id, api_hash)
-
-async def send_video_to_channel(video_path, channel_id):
+async def send_video_to_channel(video_path, channel_id, phone=None, code=None):
+    client = TelegramClient('session_name', api_id, api_hash)
+    
     try:
         await client.connect()
         if not await client.is_user_authorized():
-            # Если сессия не авторизована, запросить номер телефона и SMS-код
-            phone = st.text_input('Введите ваш номер телефона для авторизации:')
-            if phone:
-                await client.send_code_request(phone)
-                code = st.text_input('Введите код из SMS:')
-                if code:
-                    await client.sign_in(phone, code)
+            if phone and code:
+                await client.sign_in(phone, code)
+            else:
+                raise Exception("Необходимо пройти авторизацию")
+
         # Отправка видео в канал
         await client.send_file(channel_id, video_path)
         return True
@@ -65,12 +62,15 @@ if st.session_state['videos']:
 
 # Кнопка отправки видео в канал
 if st.button("Отправить видео в Telegram канал"):
+    phone = st.text_input('Введите ваш номер телефона для авторизации:', key='phone_input')
+    code = st.text_input('Введите код из SMS:', key='code_input')
+    
     if st.session_state['videos']:
         with st.spinner("Отправка видео..."):
             for video_path in st.session_state['videos']:
                 st.info(f"Отправка {video_path} в канал...")
                 # Отправляем видео в Telegram канал
-                result = run_async_task(send_video_to_channel(video_path, channel_id))
+                result = run_async_task(send_video_to_channel(video_path, channel_id, phone, code))
                 if result:
                     st.success(f"Видео {video_path} успешно отправлено!")
                 else:
